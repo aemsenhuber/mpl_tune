@@ -52,7 +52,7 @@ class FigText(object):
 		"""Set whether the text should be analysed through LaTeX."""
 		self.tex = tex
 
-	def conv( self, text, math = True ):
+	def conv( self, text, math = True, tex = None ):
 		"""Add needed escaping sequences to run the text through LaTeX (or mathtext) processor.
 
 		Parameters
@@ -66,17 +66,20 @@ class FigText(object):
 			The transformed text.
 		"""
 
-		if self.tex:
+		if tex is None:
+			tex = self.tex
+
+		if tex:
 			if math:
 				return "$\\mathrm{" + text.replace( " ", "~" ) + "}$"
 			else:
-				return text.replace( "_", "\\_" ).replace( "^", "\\^" )
+				return text.replace( "_", "\\_" ).replace( "^", "\\^" ).replace( "<", "$<$" ).replace( ">", "$>$" )
 		elif math and ( "^" in text or "_" in text or "\\" in text ):
 			return "$\\mathdefault{" + text.replace( " ", "\\ " ) + "}$"
 		else:
 			return text
 
-	def get_text_args( self, color = None, size = None ):
+	def get_text_args( self, color = None, size = None, tex = None ):
 		"""Prepare additional arguments to a call that sets text.
 
 		Parameters
@@ -89,7 +92,10 @@ class FigText(object):
 		dict
 			Arguments that can be passed to various matplotlib calls that set text.
 		"""
-		ret = { "usetex": self.tex }
+		if tex is None:
+			ret = { "usetex": self.tex }
+		else:
+			ret = { "usetex": tex }
 
 		if not color is None:
 			ret[ "color" ] = color
@@ -109,57 +115,70 @@ class FigText(object):
 
 		return ret
 
-	def set_axes( self, ax ):
+	def set_axes( self, ax, color = None, size = None ):
 		"""Update the properties of a Axes object.
 
 		Parameters
 		----------
 		ax : matplotlib.axes.Axes object
 			Axes object to work on.
+		color : Override for the text's color
+		size : Override for the text's size
 		"""
 		ax.set_facecolor( "none" )
 
-		ax.tick_params( axis = "both", which = "both", color = self.color )
+		ax.tick_params( axis = "both", which = "both", color = self.color if color is None else color )
 
 		for key in ax.spines:
-			ax.spines[ key ].set_color( self.color )
+			ax.spines[ key ].set_color( self.color if color is None else color )
 
 		for t in ax.get_xticklabels() + ax.get_yticklabels():
-			self.set_text( t )
+			self.set_text( t, color = color, size = size )
 
-	def set_cbar( self, cbar ):
+	def set_cbar( self, cbar, color = None, size = None ):
 		"""Update the properties of a Colobar object.
 
 		Parameters
 		----------
 		cbar : matplotlib.colorbar.Colobar object
 			Colobar object to work on.
+		color : Override for the text's color
+		size : Override for the text's size
 		"""
-		self.set_axes( cbar.ax )
-		cbar.outline.set_edgecolor( self.color )
+		self.set_axes( cbar.ax, color = color, size = size )
+		cbar.outline.set_edgecolor( self.color if color is None else color )
 
-	def set_legend( self, legend ):
+	def set_legend( self, legend, color = None, size = None ):
 		"""Update the properties of a Legend object.
 
 		Parameters
 		----------
 		legend : matplotlib.legend.Legend object
 			Legend object to work on.
+		color : Override for the text's color
+		size : Override for the text's size
 		"""
 		for t in legend.get_texts():
-			self.set_text( t )
+			self.set_text( t, color = color, size = size )
 
-	def set_text( self, text ):
+	def set_text( self, text, color = None, size = None ):
 		"""Update the properties of a Text object.
 
 		Parameters
 		----------
 		text : matplotlib.text.Text object
 			Text object to work on.
+		color : Override for the text's color
+		size : Override for the text's size
 		"""
 		text.set_usetex( self.tex )
-		text.set_color( self.color )
+		text.set_color( self.color if color is None else color )
 		if self.fontproperties is None:
-			text.set_fontsize( self.size )
+			text.set_fontsize( self.size if size is None else size )
 		else:
-			text.set_fontproperties( self.fontproperties )
+			if size is None:
+				text.set_fontproperties( self.fontproperties )
+			else:
+				fp = self.fontproperties.copy()
+				fp.set_size( size )
+				text.set_fontproperties( fp )
