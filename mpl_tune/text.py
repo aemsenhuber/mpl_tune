@@ -135,6 +135,9 @@ class FigText(object):
 		for t in ax.get_xticklabels() + ax.get_yticklabels():
 			self.set_text( t, color = color, size = size )
 
+		for t in ax.get_xticklabels( minor = True ) + ax.get_yticklabels( minor = True ):
+			self.set_text( t, color = color, size = False )
+
 	def set_cbar( self, cbar, color = None, size = None ):
 		"""Update the properties of a Colobar object.
 
@@ -168,13 +171,15 @@ class FigText(object):
 		----------
 		text : matplotlib.text.Text object
 			Text object to work on.
-		color : Override for the text's color
-		size : Override for the text's size
+		color : Override for the text's color (or False to leave unchanged, or None to use the default value)
+		size : Override for the text's size (or False to leave unchanged, or None to use the default value)
 		"""
 		text.set_usetex( self.tex )
-		text.set_color( self.color if color is None else color )
+		if not color is False:
+			text.set_color( self.color if color is None else color )
 		if self.fontproperties is None:
-			text.set_fontsize( self.size if size is None else size )
+			if not size is False:
+				text.set_fontsize( self.size if size is None else size )
 		else:
 			if size is None:
 				text.set_fontproperties( self.fontproperties )

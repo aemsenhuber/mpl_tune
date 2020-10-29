@@ -3,7 +3,7 @@ This package defines two classes that hold common actions performed on [matplotl
 ## Installation
 
 To install mpl_tune, run the following command:
-```pip install mpl_tune```
+```pip install mpl-tune```
 
 ## Usage
 

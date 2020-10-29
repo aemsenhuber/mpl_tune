@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name = "mpl_tune",
-    version = "0.2",
+    version = "0.3",
     author = "Alexandre Emsenhuber",
     author_email = "emsenhuber@lpl.arizona.edu",
     description = "A collection of matplotlib tuning scripts",
