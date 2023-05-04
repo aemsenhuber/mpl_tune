@@ -1,4 +1,5 @@
-# Copyright (c) 2018-2019 Arizona Board of Regents
+# Copyright (c) 2018-2020 Arizona Board of Regents
+# Copyright (c) 2023 Ludwig-Maximilians Universitaet Muenchen
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 class FigText(object):
 	"""Helper to set the main foreground color and text size.
 
@@ -21,7 +24,16 @@ class FigText(object):
 	def __init__( self, size = None, color = None, fontproperties = None, tex = False ):
 		self.size = size
 		self.color = color
-		self.fontproperties = fontproperties
+		if fontproperties is False:
+			self.fontproperties = None
+		elif fontproperties is None and "MPL_TUNE_FONT_PATH" in os.environ and len( os.environ[ "MPL_TUNE_FONT_PATH" ] ):
+			import matplotlib.font_manager
+			fpsize = os.environ.get( "MPL_TUNE_FONT_SIZE" )
+			if fpsize is None or len( fpsize ) == 0:
+				fpsize = size
+			self.fontproperties = matplotlib.font_manager.FontProperties( fname = os.environ.get( "MPL_TUNE_FONT_PATH" ), size = fpsize )
+		else:
+			self.fontproperties = fontproperties
 		self.tex = tex
 
 	def get_size( self ):
@@ -74,6 +86,21 @@ class FigText(object):
 				return "$\\mathrm{" + text.replace( " ", "~" ) + "}$"
 			else:
 				return text.replace( "_", "\\_" ).replace( "^", "\\^" ).replace( "<", "$<$" ).replace( ">", "$>$" )
+		elif text.count( "$" ) > 1:
+			ret = ""
+			start = 0
+			while True:
+				pos = text.find( "$", start )
+				if pos == -1:
+					ret += text[ start: ]
+					break
+				poe = text.find( "$", pos + 1 )
+				if pos == -1:
+					ret += text[ start: ]
+					break
+				ret += text[ start:pos+1 ] + "\\mathdefault{" + text[ pos+1:poe ].replace( " ", "\\ " ) + "}$"
+				start = poe + 1
+			return ret
 		elif math and ( "^" in text or "_" in text or "\\" in text ):
 			return "$\\mathdefault{" + text.replace( " ", "\\ " ) + "}$"
 		else:
